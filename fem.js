@@ -1,5 +1,5 @@
-const P_TOL = 1e6
-const D_TOL = 1e9
+const P_TOL = 1e6;
+const D_TOL = 1e9;
 
 const QUAD_TRIS = [
   [0, 0],
@@ -7,68 +7,72 @@ const QUAD_TRIS = [
   [1, 0],
   [1, 0],
   [0, 1],
-  [1, 1]
-]
+  [1, 1],
+];
 
-function dot3 (values, weights) {
-  const r = [0, 0, 0]
+function dot3(values, weights) {
+  const r = [0, 0, 0];
   for (let i = 0; i < values.length; ++i) {
-    const v = values[i]
-    const w = weights[i]
+    const v = values[i];
+    const w = weights[i];
     for (let j = 0; j < 3; ++j) {
-      r[j] += w * v[j]
+      r[j] += w * v[j];
     }
   }
-  return r
+  return r;
 }
 
-function pick (array, index) {
-  const r = new Array(index.length)
+function pick(array, index) {
+  const r = new Array(index.length);
   for (let i = 0; i < index.length; ++i) {
-    r[i] = array[index[i]]
+    r[i] = array[index[i]];
   }
-  return r
+  return r;
 }
 
-function cmpP (a, b) {
-  return Math.abs(a[0] - b[0]) < P_TOL ||
-          Math.abs(a[1] - b[1]) < P_TOL ||
-          Math.abs(a[2] - b[2]) < P_TOL
+function cmpP(a, b) {
+  return (
+    Math.abs(a[0] - b[0]) < P_TOL ||
+    Math.abs(a[1] - b[1]) < P_TOL ||
+    Math.abs(a[2] - b[2]) < P_TOL
+  );
 }
 
-function cmpD (a, b) {
-  return Math.abs(a[0] - b[0]) < D_TOL ||
-          Math.abs(a[1] - b[1]) < D_TOL ||
-          Math.abs(a[2] - b[2]) < D_TOL
+function cmpD(a, b) {
+  return (
+    Math.abs(a[0] - b[0]) < D_TOL ||
+    Math.abs(a[1] - b[1]) < D_TOL ||
+    Math.abs(a[2] - b[2]) < D_TOL
+  );
 }
 
-function convertLineVerts (lineV) {
-  const lineElements = []
+function convertLineVerts(lineV) {
+  const lineElements = [];
   for (let i = 0; i < lineV.length; i += 3) {
-    const a = lineV[i]
-    const b = lineV[i + 1]
-    const c = lineV[i + 2]
+    const a = lineV[i];
+    const b = lineV[i + 1];
+    const c = lineV[i + 2];
     lineElements.push([
       Math.min(a, b, c),
       Math.min(Math.max(a, b), Math.max(b, c), Math.max(c, a)),
-      Math.max(a, b, c)
-    ])
+      Math.max(a, b, c),
+    ]);
   }
-  lineElements.sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2])
-  let ptr = 1
+  lineElements.sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]);
+  let ptr = 1;
   for (let i = 1; i < lineElements.length; ++i) {
-    const a = lineElements[i - 1]
-    const b = lineElements[i]
+    const a = lineElements[i - 1];
+    const b = lineElements[i];
     if (a[0] !== b[0] || a[1] !== b[1] || a[2] !== b[2]) {
-      lineElements[ptr++] = b
+      lineElements[ptr++] = b;
     }
   }
-  lineElements.length = ptr
-  return lineElements
+  lineElements.length = ptr;
+  return lineElements;
 }
 
-module.exports = function ({regl}) {
-  function Mesh (
+module.exports = function ({ regl }) {
+  function Mesh(
     position,
     positionBounds,
     displacement,
@@ -83,32 +87,35 @@ module.exports = function ({regl}) {
     lineP1,
     lineD1,
     lineN,
-    lineElements) {
-    this._position = position
-    this._positionBounds = positionBounds
-    this._displacement = displacement
-    this._displacementBounds = displacementBounds
-    this._maxDisplacement = maxDisplacment
-    this._stress = stress
-    this._stressBounds = stressBounds
-    this._palette = palette
-    this._count = count
-    this._lineP0 = lineP0
-    this._lineD0 = lineD0
-    this._lineP1 = lineP1
-    this._lineD1 = lineD1
-    this._lineN = lineN
-    this._lineElements = lineElements
+    lineElements
+  ) {
+    this._position = position;
+    this._positionBounds = positionBounds;
+    this._displacement = displacement;
+    this._displacementBounds = displacementBounds;
+    this._maxDisplacement = maxDisplacment;
+    this._stress = stress;
+    this._stressBounds = stressBounds;
+    this._palette = palette;
+    this._count = count;
+    this._lineP0 = lineP0;
+    this._lineD0 = lineD0;
+    this._lineP1 = lineP1;
+    this._lineD1 = lineD1;
+    this._lineN = lineN;
+    this._lineElements = lineElements;
 
-    this.center = [0, 0, 0]
-    this.radius = 0
+    this.center = [0, 0, 0];
+    this.radius = 0;
     for (let i = 0; i < 3; ++i) {
-      this.center[i] = 0.5 *
-        (this._positionBounds[0][i] + this._positionBounds[1][i])
+      this.center[i] =
+        0.5 * (this._positionBounds[0][i] + this._positionBounds[1][i]);
       this.radius += Math.pow(
-        this._positionBounds[1][i] - this._positionBounds[0][i], 2)
+        this._positionBounds[1][i] - this._positionBounds[0][i],
+        2
+      );
     }
-    this.radius = Math.sqrt(this.radius)
+    this.radius = Math.sqrt(this.radius);
   }
 
   const drawElements = regl({
@@ -149,27 +156,27 @@ module.exports = function ({regl}) {
     `,
 
     uniforms: {
-      displacementMag: regl.prop('displacementMag'),
+      displacementMag: regl.prop("displacementMag"),
 
-      displacementColor: regl.prop('displacementColor'),
-      stressColor: regl.prop('stressColor'),
-      totalColor: regl.prop('totalColor'),
-      colorShift: regl.prop('colorShift'),
+      displacementColor: regl.prop("displacementColor"),
+      stressColor: regl.prop("stressColor"),
+      totalColor: regl.prop("totalColor"),
+      colorShift: regl.prop("colorShift"),
 
-      palette: regl.this('_palette')
+      palette: regl.this("_palette"),
     },
 
     attributes: {
-      position: regl.this('_position'),
-      displacement: regl.this('_displacement'),
-      stress: regl.this('_stress')
+      position: regl.this("_position"),
+      displacement: regl.this("_displacement"),
+      stress: regl.this("_stress"),
     },
 
-    count: regl.this('_count'),
+    count: regl.this("_count"),
     offset: 0,
-    primitive: 'triangles',
-    elements: null
-  })
+    primitive: "triangles",
+    elements: null,
+  });
 
   const drawLines = regl({
     vert: `
@@ -200,54 +207,56 @@ module.exports = function ({regl}) {
     `,
 
     attributes: {
-      p0: regl.this('_lineP0'),
-      d0: regl.this('_lineD0'),
-      p1: regl.this('_lineP1'),
-      d1: regl.this('_lineD1'),
-      n: regl.this('_lineN')
+      p0: regl.this("_lineP0"),
+      d0: regl.this("_lineD0"),
+      p1: regl.this("_lineP1"),
+      d1: regl.this("_lineD1"),
+      n: regl.this("_lineN"),
     },
 
     uniforms: {
-      displacementMag: regl.prop('displacementMag'),
-      lineWidth: regl.prop('lineWidth'),
-      shape: ({viewportWidth, viewportHeight, pixelRatio}) =>
-        [
-          viewportWidth / pixelRatio,
-          viewportHeight / pixelRatio
-        ]
+      displacementMag: regl.prop("displacementMag"),
+      lineWidth: regl.prop("lineWidth"),
+      shape: ({ viewportWidth, viewportHeight, pixelRatio }) => [
+        viewportWidth / pixelRatio,
+        viewportHeight / pixelRatio,
+      ],
     },
 
     depth: {
-      func: '<='
+      func: "<=",
     },
 
-    elements: regl.this('_lineElements')
-  })
+    elements: regl.this("_lineElements"),
+  });
 
   Mesh.prototype = {
-    draw ({mode, displacement, lineWidth, elements, lines}) {
-      let displacementColor = [0, 0, 0]
-      let totalColor = 0
-      let stressColor = 0
-      let colorShift = 0
+    draw({ mode, displacement, lineWidth, elements, lines }) {
+      let displacementColor = [0, 0, 0];
+      let totalColor = 0;
+      let stressColor = 0;
+      let colorShift = 0;
 
-      const stressBounds = this._stressBounds
-      const displacementBounds = this._displacementBounds
+      const stressBounds = this._stressBounds;
+      const displacementBounds = this._displacementBounds;
       switch (mode) {
-        case 'stress':
-          stressColor = 1 / (stressBounds[1] - stressBounds[0])
-          colorShift = -stressBounds[0] * stressColor
-          break
-        case 'x':
-        case 'y':
-        case 'z':
-          const d = mode.charCodeAt(0) - 'x'.charCodeAt(0)
-          displacementColor[d] = 1 / (displacementBounds[1][d] - displacementBounds[0][d])
-          colorShift = -displacementBounds[0][d] * displacementColor[d]
-          break
-        case 'total':
-          totalColor = 1 / this._maxDisplacement
-          break
+        case "stress":
+          stressColor = 1 / (stressBounds[1] - stressBounds[0]);
+          colorShift = -stressBounds[0] * stressColor;
+          break;
+        case "x":
+        case "y":
+        case "z":
+          const d = mode.charCodeAt(0) - "x".charCodeAt(0);
+          displacementColor[d] =
+            1 / (displacementBounds[1][d] - displacementBounds[0][d]);
+          colorShift = -displacementBounds[0][d] * displacementColor[d];
+          break;
+        case "total":
+          totalColor = 1 / this._maxDisplacement;
+          break;
+        default:
+          break;
       }
       if (elements) {
         drawElements.call(this, {
@@ -255,148 +264,147 @@ module.exports = function ({regl}) {
           totalColor,
           stressColor,
           colorShift,
-          displacementMag: displacement
-        })
+          displacementMag: displacement,
+        });
       }
       if (lines) {
         drawLines.call(this, {
           displacementMag: displacement,
-          lineWidth
-        })
+          lineWidth,
+        });
       }
-    }
-  }
+    },
+  };
 
-  function createMesh ({
-    palette,
-    coordinates,
-    displacements,
-    elements
-  }, N) {
-    const position = []
-    const displacement = []
-    const stress = []
-    let vertCount = 0
+  function createMesh({ palette, coordinates, displacements, elements }, N) {
+    const position = [];
+    const displacement = [];
+    const stress = [];
+    let vertCount = 0;
 
     const positionBounds = [
       [Infinity, Infinity, Infinity],
-      [-Infinity, -Infinity, -Infinity]
-    ]
+      [-Infinity, -Infinity, -Infinity],
+    ];
     const displacementBounds = [
       [Infinity, Infinity, Infinity],
-      [-Infinity, -Infinity, -Infinity]
-    ]
-    const stressBounds = [ Infinity, -Infinity ]
-    let maxDisplacment = 0
+      [-Infinity, -Infinity, -Infinity],
+    ];
+    const stressBounds = [Infinity, -Infinity];
+    let maxDisplacment = 0;
 
-    function V (p, d, s) {
-      position.push(p[0], p[1], p[2])
-      displacement.push(d[0], d[1], d[2])
-      stress.push(s)
-      let d2 = 0
+    function V(p, d, s) {
+      position.push(p[0], p[1], p[2]);
+      displacement.push(d[0], d[1], d[2]);
+      stress.push(s);
+      let d2 = 0;
       for (let i = 0; i < 3; ++i) {
-        positionBounds[0][i] = Math.min(positionBounds[0][i], p[i])
-        positionBounds[1][i] = Math.max(positionBounds[1][i], p[i])
-        displacementBounds[0][i] = Math.min(displacementBounds[0][i], d[i])
-        displacementBounds[1][i] = Math.max(displacementBounds[1][i], d[i])
-        d2 += Math.pow(d[i], 2)
+        positionBounds[0][i] = Math.min(positionBounds[0][i], p[i]);
+        positionBounds[1][i] = Math.max(positionBounds[1][i], p[i]);
+        displacementBounds[0][i] = Math.min(displacementBounds[0][i], d[i]);
+        displacementBounds[1][i] = Math.max(displacementBounds[1][i], d[i]);
+        d2 += Math.pow(d[i], 2);
       }
-      stressBounds[0] = Math.min(stressBounds[0], s)
-      stressBounds[1] = Math.max(stressBounds[1], s)
-      vertCount += 1
-      maxDisplacment = Math.max(maxDisplacment, Math.sqrt(d2))
+      stressBounds[0] = Math.min(stressBounds[0], s);
+      stressBounds[1] = Math.max(stressBounds[1], s);
+      vertCount += 1;
+      maxDisplacment = Math.max(maxDisplacment, Math.sqrt(d2));
     }
 
-    const lineP0 = []
-    const lineD0 = []
-    const lineP1 = []
-    const lineD1 = []
-    const lineN = []
-    const lineV = []
+    const lineP0 = [];
+    const lineD0 = [];
+    const lineP1 = [];
+    const lineD1 = [];
+    const lineN = [];
+    const lineV = [];
 
-    const lineVertHash = {}
-    function LV (p0, d0, p1, d1, n) {
-      const k = (p0[0] * P_TOL) + ',' + (p0[1] * P_TOL) + ',' + (p0[2] * P_TOL)
-      const bucket = lineVertHash[k] || (lineVertHash[k] = [])
+    const lineVertHash = {};
+    function LV(p0, d0, p1, d1, n) {
+      const k = p0[0] * P_TOL + "," + p0[1] * P_TOL + "," + p0[2] * P_TOL;
+      const bucket = lineVertHash[k] || (lineVertHash[k] = []);
 
       for (let i = 0; i < bucket.length; ++i) {
-        const x = bucket[i]
-        if (lineN[x] !== n ||
+        const x = bucket[i];
+        if (
+          lineN[x] !== n ||
           cmpD(d0, lineD0[x]) ||
           cmpD(d1, lineD1[x]) ||
-          cmpP(p1, lineP1[x])) {
-          break
+          cmpP(p1, lineP1[x])
+        ) {
+          break;
         }
       }
 
-      const c = lineP0.length
-      bucket.push(c)
-      lineV.push(c)
-      lineP0.push(p0)
-      lineD0.push(d0)
-      lineP1.push(p1)
-      lineD1.push(d1)
-      lineN.push(n)
+      const c = lineP0.length;
+      bucket.push(c);
+      lineV.push(c);
+      lineP0.push(p0);
+      lineD0.push(d0);
+      lineP1.push(p1);
+      lineD1.push(d1);
+      lineN.push(n);
     }
 
-    function E (p0, d0, p1, d1) {
-      LV(p0, d0, p1, d1, 1)
-      LV(p0, d0, p1, d1, -1)
-      LV(p1, d1, p0, d0, 1)
-      LV(p1, d1, p0, d0, -1)
-      LV(p0, d0, p1, d1, 1)
-      LV(p1, d1, p0, d0, 1)
+    function E(p0, d0, p1, d1) {
+      LV(p0, d0, p1, d1, 1);
+      LV(p0, d0, p1, d1, -1);
+      LV(p1, d1, p0, d0, 1);
+      LV(p1, d1, p0, d0, -1);
+      LV(p0, d0, p1, d1, 1);
+      LV(p1, d1, p0, d0, 1);
     }
 
-    function W6 (a, b) {
-      const c = 1 - a - b
+    function W6(a, b) {
+      const c = 1 - a - b;
       return [
         a * (2 * a - 1),
         4 * a * b,
         b * (2 * b - 1),
         4 * b * c,
         c * (2 * c - 1),
-        4 * c * a
-      ]
+        4 * c * a,
+      ];
     }
 
-    function P6 (S, cell) {
-      const P = pick(coordinates, cell)
-      const D = pick(displacements, cell)
+    function P6(S, cell) {
+      const P = pick(coordinates, cell);
+      const D = pick(displacements, cell);
 
       for (let i = 0; i < N; ++i) {
         for (let j = 0; i + j < N; ++j) {
-          const COUNT = (i + j === N - 1 ? 3 : 6)
+          const COUNT = i + j === N - 1 ? 3 : 6;
           for (let v = 0; v < COUNT; ++v) {
-            const a = (i + QUAD_TRIS[v][0]) / N
-            const b = (j + QUAD_TRIS[v][1]) / N
-            const W = W6(a, b)
-            V(dot3(P, W), dot3(D, W), S)
+            const a = (i + QUAD_TRIS[v][0]) / N;
+            const b = (j + QUAD_TRIS[v][1]) / N;
+            const W = W6(a, b);
+            V(dot3(P, W), dot3(D, W), S);
           }
         }
       }
 
       for (let s = 0; s < 3; ++s) {
-        let P1 = null
-        let D1 = null
+        let P1 = null;
+        let D1 = null;
         for (let i = 0; i <= N; ++i) {
           const W =
-            (s === 0) ? W6(i / N, 0)
-            : (s === 1) ? W6(0, i / N)
-                        : W6(i / N, 1 - i / N)
-          const P2 = dot3(P, W)
-          const D2 = dot3(D, W)
+            s === 0
+              ? W6(i / N, 0)
+              : s === 1
+              ? W6(0, i / N)
+              : W6(i / N, 1 - i / N);
+          const P2 = dot3(P, W);
+          const D2 = dot3(D, W);
 
           if (P1) {
-            E(P1, D1, P2, D2)
+            E(P1, D1, P2, D2);
           }
-          P1 = P2
-          D1 = D2
+          P1 = P2;
+          D1 = D2;
         }
       }
     }
 
-    function W8 (a, b) {
+    function W8(a, b) {
       return [
         0.25 * (1 - a) * (b - 1) * (a + b + 1),
         0.5 * (1 - b) * (1 - a * a),
@@ -405,64 +413,64 @@ module.exports = function ({regl}) {
         0.25 * (1 + a) * (1 + b) * (a + b - 1),
         0.5 * (1 + b) * (1 - a * a),
         0.25 * (a - 1) * (b + 1) * (a - b + 1),
-        0.5 * (1 - a) * (1 - b * b)
-      ]
+        0.5 * (1 - a) * (1 - b * b),
+      ];
     }
 
-    function P8 (S, cell) {
-      const P = pick(coordinates, cell)
-      const D = pick(displacements, cell)
+    function P8(S, cell) {
+      const P = pick(coordinates, cell);
+      const D = pick(displacements, cell);
 
       for (let i = 0; i < N; ++i) {
         for (let j = 0; j < N; ++j) {
           for (let v = 0; v < QUAD_TRIS.length; ++v) {
-            const a = 2 * (i + QUAD_TRIS[v][0]) / N - 1
-            const b = 2 * (j + QUAD_TRIS[v][1]) / N - 1
-            const W = W8(a, b)
-            V(dot3(P, W), dot3(D, W), S)
+            const a = (2 * (i + QUAD_TRIS[v][0])) / N - 1;
+            const b = (2 * (j + QUAD_TRIS[v][1])) / N - 1;
+            const W = W8(a, b);
+            V(dot3(P, W), dot3(D, W), S);
           }
         }
       }
 
-      let curCorner = 0
+      let curCorner = 0;
       for (let d = 0; d < 2; ++d) {
         for (let s = 0; s <= 1; ++s, ++curCorner) {
-          let P1 = null
-          let D1 = null
+          let P1 = null;
+          let D1 = null;
           for (let i = 0; i <= N; ++i) {
-            const ab = [0, 0]
-            ab[d] = 2 * i / N - 1
-            ab[d ^ 1] = 2 * s - 1
-            const W = W8(ab[0], ab[1])
-            const P2 = dot3(P, W)
-            const D2 = dot3(D, W)
+            const ab = [0, 0];
+            ab[d] = (2 * i) / N - 1;
+            ab[d ^ 1] = 2 * s - 1;
+            const W = W8(ab[0], ab[1]);
+            const P2 = dot3(P, W);
+            const D2 = dot3(D, W);
 
             if (P1) {
-              E(P1, D1, P2, D2)
+              E(P1, D1, P2, D2);
             }
-            P1 = P2
-            D1 = D2
+            P1 = P2;
+            D1 = D2;
           }
         }
       }
     }
 
-    elements.forEach(({type, stresses, cells}) => {
+    elements.forEach(({ type, stresses, cells }) => {
       switch (type) {
-        case 'P6':
+        case "P6":
           for (let i = 0; i < stresses.length; ++i) {
-            P6(stresses[i], cells[i])
+            P6(stresses[i], cells[i]);
           }
-          break
-        case 'P8':
+          break;
+        case "P8":
           for (let i = 0; i < stresses.length; ++i) {
-            P8(stresses[i], cells[i])
+            P8(stresses[i], cells[i]);
           }
-          break
+          break;
         default:
-          console.error('unsupported element type:', type)
+          console.error("unsupported element type:", type);
       }
-    })
+    });
 
     return new Mesh(
       regl.buffer(position),
@@ -476,9 +484,9 @@ module.exports = function ({regl}) {
         data: palette.map(([r, g, b]) => [
           255 * Math.pow(r, 2.2),
           255 * Math.pow(g, 2.2),
-          255 * Math.pow(b, 2.2)
+          255 * Math.pow(b, 2.2),
         ]),
-        shape: [palette.length, 1, 3]
+        shape: [palette.length, 1, 3],
       }),
       vertCount,
       regl.buffer(lineP0),
@@ -486,8 +494,9 @@ module.exports = function ({regl}) {
       regl.buffer(lineP1),
       regl.buffer(lineD1),
       regl.buffer(lineN),
-      regl.elements(convertLineVerts(lineV)))
+      regl.elements(convertLineVerts(lineV))
+    );
   }
 
-  return createMesh
-}
+  return createMesh;
+};
